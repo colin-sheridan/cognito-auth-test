@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LoginController;
 
 /*
@@ -19,7 +20,7 @@ Route::middleware(['auth', 'cognito'])->group(function () {
         return view('welcome');
     })->name('welcome');
 
-    // Any other pages you need to protect behind authentication go here
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 });
 
 Route::get('/saml/login', [LoginController::class, 'samlLogin']);
