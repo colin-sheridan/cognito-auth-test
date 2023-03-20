@@ -21,11 +21,9 @@ class EnsureCognitoAuthenticates
     public function handle(Request $request, Closure $next)
     {
         $attemptedUrl = $request->fullUrl();
-        Log::debug($attemptedUrl);
 
         // If no access_token in session, redirect to sign-in
         if (!$request->session()->has('cognito_access_token')) {
-            Log::debug('does not have token!');
             return route('login', ["desired_url" => urlencode($attemptedUrl)]);
         } else {
             try {
@@ -36,7 +34,6 @@ class EnsureCognitoAuthenticates
                 ]);
 
                 // Check access token is still valid
-                Log::debug('checking token validity!');
                 $client->getUser([
                     'AccessToken' => $request->session()->get('cognito_access_token')
                 ]);
@@ -46,26 +43,21 @@ class EnsureCognitoAuthenticates
                 // If problem, then it's invalid or its expired
                 // See if the Laravel session can save us
                 if (Auth::check()) {
-                    Log::debug('checking auth!');
                     // Try to refresh it with a token from the DB
                     $user = Auth::user();
                     try {
                         $this->exchangeRefreshForAccess($user->refresh_token, $attemptedUrl);
                         // If no error, then we're authenticated, continue
-                        Log::debug('Authenticated!');
                         return $next($request);
                     } catch (\Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException $e) {
                         // If refreshing doesn't work, refresh token is out of time too.
-                        Log::debug('token expired!');
                         $user->refresh_token = "";
                         $user->save();
                     }
                     // If we get this far, nothing has worked. Redirect to the login screen
-                    Log::debug('returning route!');
                     return route('login', ["desired_url" => urlencode($attemptedUrl)]);
                 } else {
                     // Laravel session did not save us. Redirect to login.
-                    Log::debug('no valid session!');
                     return route('login', ["desired_url" => urlencode($attemptedUrl)]);
                 }
             }
@@ -82,7 +74,6 @@ class EnsureCognitoAuthenticates
      */
     public function exchangeRefreshForAccess($refresh_token, $attemptedUrl)
     {
-        Log::debug("Exchanging refresh for access");
         $client = new Client([
             'base_uri' => env('COGNITO_API_BASE_URI'),
         ]);
@@ -98,8 +89,6 @@ class EnsureCognitoAuthenticates
         $data = json_decode($response->getBody(), true);
 
         if (!array_key_exists('error', $data)) {
-            Log::debug('access token: ');
-            Log::debug($data['access_token']);
             return $data['access_token'];
         } else {
             return route('login', ["desired_url" => urlencode($attemptedUrl)]);

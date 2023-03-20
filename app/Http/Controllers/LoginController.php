@@ -25,9 +25,6 @@ class LoginController extends Controller
         // Send code to /oauth2/token
         $data = $this->exchangeCodeForTokens($authCode, env('COGNITO_APP_ID'), env('COGNITO_REDIRECT_URL'));
 
-        Log::Debug('exchangeCodeForTokens Response: ');
-        Log::Debug($data);
-
         if (!array_key_exists('error', $data)) {
 
             // Put cognito_access_code in the session
@@ -39,21 +36,15 @@ class LoginController extends Controller
             // Get some info about them & make sure they're in the db
             $detailsData = $this->getUserDetails($data['access_token']);
             // Put the refresh_token in the database with the user info
-            Log::Debug('$detailsData incoming:');
-            Log::Debug($detailsData);
-            Log::Debug('$data is:');
-            Log::Debug($data);
-            Log::Debug('$refresh_token is: ');
-            Log::Debug($data['refresh_token']);
             $user = User::updateOrCreate(
-                ['email' => $detailsData['username']],
+                ['email' => $detailsData['email']],
                 [
-                    'email' => $detailsData['username'],
-                    'display_name' => 'Colin Sheridan',
-                    'username' => 'csheridan',
-                    'employee_id' => '123456',
-                    'given_name' => 'Colin',
-                    'family_name' => 'Sheridan',
+                    'email' => $detailsData['email'],
+                    'display_name' => $detailsData['nickname'],
+                    'username' => $detailsData['preferred_username'],
+                    'employee_id' => $detailsData['custom:colleagueID'],
+                    'given_name' => $detailsData['given_name'],
+                    'family_name' => $detailsData['family_name'],
                     'refresh_token' => $data['refresh_token'],
                 ]
             );
