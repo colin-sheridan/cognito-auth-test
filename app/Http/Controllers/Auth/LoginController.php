@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
@@ -17,8 +20,8 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function samlLogin(Request $request)
-    {
+
+    public function samlLogin(Request $request) {
         // Get code out of query string
         $authCode = $request->input('code');
 
@@ -136,5 +139,22 @@ class LoginController extends Controller
 
             return $desiredUrl;
         }
+    }
+
+   /**
+     * Destroy an authenticated session.
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        Log::Debug($user);
+        $user->update(['refresh_token' => '',]);
+        Log::Debug('HERE NOW');
+        Log::Debug($user);
+
+        Session::flush();
+
+        return redirect('/');
+
     }
 }

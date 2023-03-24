@@ -24,8 +24,10 @@ class EnsureCognitoAuthenticates
 
         // If no access_token in session, redirect to sign-in
         if (!$request->session()->has('cognito_access_token')) {
+            Log::Debug('****NO ACCESS TOKEN!****');
             return route('login', ["desired_url" => urlencode($attemptedUrl)]);
         } else {
+            Log::Debug('****YES ACCESS TOKEN!****');
             try {
                 // Now there is a token, lets verify it
                 $client = new CognitoIdentityProviderClient([
@@ -45,6 +47,7 @@ class EnsureCognitoAuthenticates
                 if (Auth::check()) {
                     // Try to refresh it with a token from the DB
                     $user = Auth::user();
+                    Log::Debug('****EXCHANGING REFRESH TOKEN!****');
                     try {
                         $this->exchangeRefreshForAccess($user->refresh_token, $attemptedUrl);
                         // If no error, then we're authenticated, continue
