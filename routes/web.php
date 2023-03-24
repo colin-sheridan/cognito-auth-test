@@ -28,6 +28,6 @@ Route::middleware(['auth', 'cognito'])->group(function () {
 
 Route::get('/saml/login', [LoginController::class, 'samlLogin']);
 
-Route::redirect('/login', 'https://willametteuniversity.auth.us-west-2.amazoncognito.com/oauth2/authorize?client_id=6d00flmvp6qtl71q9hgaboq461&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+profile&redirect_uri=http%3A%2F%2Flocalhost%2Fsaml%2Flogin')
+Route::redirect('/login', env('COGNITO_HOSTED_UI_URL'))
     ->name('login');
 
